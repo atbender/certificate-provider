@@ -1,0 +1,40 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libcairo2-dev \
+    wget \
+    fontconfig \
+    && rm -rf /var/lib/apt/lists/*
+
+# copy requirements first for better layer caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ ./src/
+COPY assets/ ./assets/
+COPY scripts/ ./scripts/
+
+# install fonts
+RUN chmod +x ./scripts/install_fonts.sh && ./scripts/install_fonts.sh
+
+# wrapper script to run api and streamlit
+RUN echo '#!/bin/bash\n\
+export PYTHONPATH=$PYTHONPATH:/app\n\
+streamlit run src/web/certificate.py --server.port=8501 --server.address=0.0.0.0 &\n\
+python -m src.main\n\
+wait\n\
+' > /app/run.sh && chmod +x /app/run.sh
+
+RUN mkdir -p /app/data
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# expose streamlit and api ports
+EXPOSE 8501
+EXPOSE 8000
+
+ENTRYPOINT ["/app/run.sh"]

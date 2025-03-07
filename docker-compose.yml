@@ -1,0 +1,13 @@
+services:
+  certificate-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"  # streamlit ui
+      - "8000:8000"  # api endpoint
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    environment:
+      - CERT_DB_PATH=/app/data/certificates_db.json
