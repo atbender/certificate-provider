@@ -4,10 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8501:8501"  # streamlit ui
       - "8000:8000"  # api endpoint
+      - "8501:8501"  # web interface
     volumes:
       - ./data:/app/data
     restart: unless-stopped
     environment:
       - CERT_DB_PATH=/app/data/certificates_db.json
+      - DISABLE_STREAMLIT=true
+      - ADMIN_TOKEN=your-secure-admin-token

@@ -20,12 +20,10 @@ COPY scripts/ ./scripts/
 # install fonts
 RUN chmod +x ./scripts/install_fonts.sh && ./scripts/install_fonts.sh
 
-# wrapper script to run api and streamlit
+# wrapper script to run api only (removed streamlit as certificate.py doesn't exist)
 RUN echo '#!/bin/bash\n\
 export PYTHONPATH=$PYTHONPATH:/app\n\
-streamlit run src/web/certificate.py --server.port=8501 --server.address=0.0.0.0 &\n\
 python -m src.main\n\
-wait\n\
 ' > /app/run.sh && chmod +x /app/run.sh
 
 RUN mkdir -p /app/data

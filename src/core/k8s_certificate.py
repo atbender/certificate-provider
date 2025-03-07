@@ -95,14 +95,21 @@ def generate_verification_code(cert_id, student_name, course_name):
     return verification_code.upper()
 
 
-def save_certificate_data(cert_id, verification_code, student_name, course_name, issue_date):
+def save_certificate_data(cert_id, verification_code, student_name, course_name, issue_date, instructor="", co_instructor=""):
+    if isinstance(instructor, list):
+        teachers = instructor
+        instructor = teachers[0] if teachers and len(teachers) > 0 else ""
+        co_instructor = teachers[1] if teachers and len(teachers) > 1 else ""
+
     cert_data = {
         "id": cert_id,
         "verification_code": verification_code,
         "student_name": student_name,
         "course_name": course_name,
         "issue_date": issue_date,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "instructor": instructor,
+        "co_instructor": co_instructor
     }
 
     db = CertificateDB()
@@ -151,8 +158,21 @@ def validate_certificate(cert_id, verification_code=None):
     return True, cert_data
 
 
-def generate_certificate(input_data, output_path="certificate.pdf"):
+def generate_certificate(student_name, course_name, instructor="", co_instructor="", issue_date=None, cert_id=None, output_path="certificate.pdf"):
     K8S_BLUE = (50/255, 109/255, 230/255)
+
+    if isinstance(instructor, list):
+        teachers = instructor
+        instructor = teachers[0] if teachers and len(teachers) > 0 else ""
+        co_instructor = teachers[1] if teachers and len(teachers) > 1 else ""
+
+    input_data = {
+        'student': student_name,
+        'course': course_name,
+        'teacher': instructor if instructor else 'TEACHER NAME',
+        'co-teacher': co_instructor if co_instructor else '',
+        'date': issue_date
+    }
 
     main_font = 'Helvetica'
     main_font_bold = 'Helvetica-Bold'
@@ -261,7 +281,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
     c.setFont(secondary_font, 10)
     c.drawString(page_width/3 - signature_line_width/2, signature_y - 45, "Lead Kubernetes Instructor")
 
-    if 'co-teacher' in input_data:
+    if input_data.get('co-teacher'):
         co_teacher_name = input_data.get('co-teacher').title()
 
         c.setFont(signature_font, 22)
@@ -281,7 +301,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
     cert_id = generate_secure_certificate_id(student_name, course_name, formatted_date)
     verification_code = generate_verification_code(cert_id, student_name, course_name)
 
-    save_certificate_data(cert_id, verification_code, student_name, course_name, formatted_date)
+    save_certificate_data(cert_id, verification_code, student_name, course_name, formatted_date, instructor, co_instructor)
 
     c.setFont(secondary_font, 10)
     c.setFillColorRGB(1, 1, 1)
@@ -309,7 +329,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
     print(f"Certificate ID: {cert_id}")
     print(f"Verification Code: {verification_code}")
 
-    return output_path, cert_id, verification_code
+    return output_path
 
 
 def main():
