@@ -15,10 +15,10 @@ CERT_DB_FILE = os.environ.get("CERT_DB_PATH", "data/certificates_db.json")
 
 def create_kubernetes_logo(size=300):
     logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets/kubernetes_logo.svg.png")
-    
+
     if not os.path.exists(logo_path):
         return None
-        
+
     try:
         img = PILImage.open(logo_path)
         img = img.resize((size, size), PILImage.Resampling.LANCZOS)
@@ -159,7 +159,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
     main_font_italic = 'Helvetica-Oblique'
     secondary_font = 'Helvetica'
     signature_font = 'DancingScript-Regular'
-    
+
     font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'assets/DancingScript-Regular.ttf')
     if os.path.exists(font_path):
         from reportlab.pdfbase import pdfmetrics
@@ -177,7 +177,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
 
     c.setFillColorRGB(*K8S_BLUE)
     c.rect(0, page_height - 45, page_width, 45, fill=1)
-    
+
     c.setFont(main_font_bold, 24)
     c.setFillColorRGB(1, 1, 1)
     c.drawString(30, page_height - 30, "KubeCraft")
@@ -213,7 +213,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
     c.setFillColorRGB(0, 0, 0)
     name_width = c.stringWidth(student_name, signature_font, 42)
     c.drawString((page_width - name_width) / 2, page_height - 260, student_name)
-    
+
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
     student_line_width = 450
@@ -236,7 +236,7 @@ def generate_certificate(input_data, output_path="certificate.pdf"):
     formatted_date = format_date(input_data.get('date', None))
     c.setFont(secondary_font, 16)
     c.setFillColorRGB(0.2, 0.2, 0.2)
-    date_text = f"Amounting a total of {hours} hours. Given on {formatted_date} at Skool/KubeCraft."
+    date_text = f"Amounting to a total of {hours} hours. Given on {formatted_date} at Skool/KubeCraft."
     date_width = c.stringWidth(date_text, secondary_font, 16)
     c.drawString((page_width - date_width) / 2, page_height - 415, date_text)
 
