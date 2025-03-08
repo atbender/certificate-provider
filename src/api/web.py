@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +11,7 @@ web_dir = Path(__file__).parent.parent / 'web'
 
 app.mount("/static", StaticFiles(directory=str(web_dir)), name="static")
 
+
 @app.get("/", response_class=HTMLResponse)
 async def get_validation_page():
     try:
@@ -19,6 +19,7 @@ async def get_validation_page():
             return f.read()
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Validation page not found")
+
 
 @app.get("/validate")
 async def validate_certificate_web(certificate_id: str, verification_code: str, request: Request):
@@ -36,6 +37,7 @@ async def validate_certificate_web(certificate_id: str, verification_code: str, 
         })
 
     return RedirectResponse(url=f"/?certificate_id={certificate_id}&verification_code={verification_code}")
+
 
 @app.get("/view")
 async def view_certificate(certificate_id: str, verification_code: str):
@@ -60,6 +62,7 @@ async def view_certificate(certificate_id: str, verification_code: str):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/download")
 async def download_certificate(certificate_id: str, verification_code: str):

@@ -8,7 +8,7 @@ from datetime import datetime
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
-from PIL import Image as PILImage, ImageDraw
+from PIL import Image as PILImage
 
 CERT_DB_FILE = os.environ.get("CERT_DB_PATH", "data/certificates_db.json")
 
@@ -176,7 +176,6 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
 
     main_font = 'Helvetica'
     main_font_bold = 'Helvetica-Bold'
-    main_font_italic = 'Helvetica-Oblique'
     secondary_font = 'Helvetica'
     signature_font = 'DancingScript-Regular'
 
@@ -242,7 +241,7 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
 
     c.setFont(secondary_font, 16)
     c.setFillColorRGB(0.2, 0.2, 0.2)
-    completion_text = f"For successfully completing the course:"
+    completion_text = "For successfully completing the course:"
     completion_width = c.stringWidth(completion_text, secondary_font, 16)
     c.drawString((page_width - completion_width) / 2, page_height - 310, completion_text)
 
@@ -390,7 +389,3 @@ def main():
 
     else:
         parser.print_help()
-
-
-if __name__ == "__main__":
-    main()

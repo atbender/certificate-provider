@@ -98,9 +98,12 @@
             const detailsDiv = document.getElementById('certificateDetails');
             const downloadBtn = document.getElementById('downloadBtn');
             const loadingDiv = document.getElementById('loading');
+            const certificatePreview = document.getElementById('certificatePreview');
 
             loadingDiv.style.display = 'block';
             resultDiv.style.display = 'none';
+            certificatePreview.style.display = 'none';
+            downloadBtn.style.display = 'none';
 
             try {
                 const response = await fetch(`/validate?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`, {
@@ -120,7 +123,7 @@
                         <h2>Certificate Validated Successfully</h2>
                     `;
                     resultDiv.className = 'success';
-
+                    
                     const cert = data.certificate_data;
                     detailsDiv.innerHTML = `
                         <h3>Certificate Details:</h3>
@@ -128,14 +131,15 @@
                         <p><strong>Course:</strong> ${cert.course_name}</p>
                         <p><strong>Issue Date:</strong> ${cert.issue_date}</p>
                     `;
-
-                    const previewUrl = `/view?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`;
-                    const downloadUrl = `/download?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`;
-
-                    const certificatePreview = document.getElementById('certificatePreview');
+                    
+                    // Set up the certificate preview with an embed tag for better PDF rendering
+                    const previewUrl = `/view?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`;  
+                    const downloadUrl = `/download?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`;  
+                    
                     certificatePreview.src = previewUrl;
                     certificatePreview.style.display = 'block';
-
+                    
+                    // Set up download button with click event instead of direct href
                     downloadBtn.onclick = function() {
                         window.location.href = downloadUrl;
                     };
@@ -144,10 +148,10 @@
                     messageDiv.innerHTML = `
                         <div class="status-icon invalid">✗</div>
                         <h2>Invalid Certificate</h2>
+                        <p>${data.message || 'Certificate validation failed'}</p>
                     `;
                     resultDiv.className = 'error';
                     detailsDiv.innerHTML = '';
-                    downloadBtn.style.display = 'none';
                 }
             } catch (error) {
                 loadingDiv.style.display = 'none';
@@ -159,14 +163,15 @@
                     <p>Failed to validate certificate. Please try again later.</p>
                 `;
                 detailsDiv.innerHTML = '';
-                downloadBtn.style.display = 'none';
             }
         }
 
+        // Get certificate ID and verification code from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const certificateId = urlParams.get('certificate_id');
         const verificationCode = urlParams.get('verification_code');
 
+        // Automatically validate if parameters are present
         if (certificateId && verificationCode) {
             document.getElementById('certificateId').value = certificateId;
             document.getElementById('verificationCode').value = verificationCode;
