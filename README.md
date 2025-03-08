@@ -55,7 +55,9 @@ curl "http://localhost:8000/api/validate?certificate_id=KC-202305-4C2A90-C9B1&ve
 ```bash
 # View in browser
 http://localhost:8000/view?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B
+```
 
+```bash
 # Download
 http://localhost:8000/download?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B
 ```
