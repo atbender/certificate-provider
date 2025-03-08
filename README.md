@@ -64,4 +64,4 @@ http://localhost:8000/download?certificate_id=KC-202305-4C2A90-C9B1&verification
 
 ## Setup Requirements
 
-- Set the `ADMIN_TOKEN` environment variable before starting the application
+- Set the `ADMIN_TOKEN` environment variable before starting the application. Default token is `your-secure-admin-token`
