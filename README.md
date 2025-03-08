@@ -13,7 +13,9 @@ docker compose up --build
 ## What It Does
 
 - **Creates digital certificates** with unique IDs and verification codes
+
 - **Validates certificates** through an API or web interface
+
 - **Provides PDF certificates** with student name, course details, and instructors
 
 ## How to Use
@@ -23,45 +25,53 @@ docker compose up --build
 Send a POST request to `/api/generate` with your admin token:
 
 ```bash
-curl -X POST "http://localhost:8000/api/generate" \
+curl -X POST "http://localhost:8050/api/generate" \
   -H "Content-Type: application/json" \
   -H "X-Admin-Token: your-secure-admin-token" \
   -d '{
-    "student_name": "John Doe",
-    "course_name": "Kubernetes Administration",
-    "issue_date": "2023-05-15",
-    "instructor": "Jane Smith",
-    "co_instructor": "Bob Johnson"
+    "student_name": "STUDENT_NAME",
+    "course_name": "COURSE_NAME",
+    "issue_date": "ISSUE_DATE",
+    "instructor": "INSTRUCTOR",
+    "instructor_title": "INSTRUCTOR_TITLE",
+    "co_instructor": "CO_INSTRUCTOR",
+    "co_instructor_title": "CO_INSTRUCTOR_TITLE",
+    "organization": "ORGANIZATION",
+    "place": "PLACE",
+    "certification_type": "CERTIFICATION_TYPE",
+    "hours": "HOURS"
   }'
 ```
 
 ### Validating Certificates
 
-**Option 1:** Use the web interface at `http://localhost:8000`
+**Option 1:** Use the web interface at `http://localhost:8050`
 
 **Option 2:** Use the API:
 
 ```bash
 # Simple GET request
-curl "http://localhost:8000/api/validate?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B"
+curl "http://localhost:8050/api/validate?certificate_id=KC-202503-819012-391D&verification_code=QO5JG6ZAYZWZ"
 ```
 
 ### Viewing & Downloading
 
-**Option 1:** Use the web interface at `http://localhost:8000`
+**Option 1:** Use the web interface at `http://localhost:8050`
 
 **Option 2:** Use the following endpoints with query parameters:
 
 ```bash
 # View in browser
-http://localhost:8000/view?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B
+http://localhost:8050/view?certificate_id=KC-202503-819012-391D&verification_code=QO5JG6ZAYZWZ
 ```
 
 ```bash
 # Download
-http://localhost:8000/download?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B
+http://localhost:8050/download?certificate_id=KC-202503-819012-391D&verification_code=QO5JG6ZAYZWZ
 ```
 
 ## Setup Requirements
 
-- Set the `ADMIN_TOKEN` environment variable before starting the application. Default token is `your-secure-admin-token`
+- Set the `ADMIN_TOKEN` environment variable before starting the application.
+
+- Default token is `your-secure-admin-token`

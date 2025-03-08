@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, Redirect
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from src.core.k8s_certificate import validate_certificate, generate_certificate
+from src.core.certificate_renderer import validate_certificate, generate_certificate
 
 app = FastAPI()
 
@@ -50,9 +50,15 @@ async def view_certificate(certificate_id: str, verification_code: str):
         pdf_path = generate_certificate(
             cert_data["student_name"],
             cert_data["course_name"],
-            cert_data.get("instructor", ""),
-            cert_data.get("co_instructor", ""),
             cert_data["issue_date"],
+            cert_data.get("instructor", ""),
+            cert_data.get("instructor_title", ""),
+            cert_data.get("co_instructor", ""),
+            cert_data.get("co_instructor_title", ""),
+            cert_data.get("organization", ""),
+            cert_data.get("place", ""),
+            cert_data.get("certification_type", ""),
+            cert_data.get("hours", ""),
             cert_data["id"]
         )
 

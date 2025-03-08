@@ -124,14 +124,6 @@
                     `;
                     resultDiv.className = 'success';
                     
-                    const cert = data.certificate_data;
-                    detailsDiv.innerHTML = `
-                        <h3>Certificate Details:</h3>
-                        <p><strong>Student Name:</strong> ${cert.student_name}</p>
-                        <p><strong>Course:</strong> ${cert.course_name}</p>
-                        <p><strong>Issue Date:</strong> ${cert.issue_date}</p>
-                    `;
-                    
                     // Set up the certificate preview with an embed tag for better PDF rendering
                     const previewUrl = `/view?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`;  
                     const downloadUrl = `/download?certificate_id=${encodeURIComponent(certificateId)}&verification_code=${encodeURIComponent(verificationCode)}`;  

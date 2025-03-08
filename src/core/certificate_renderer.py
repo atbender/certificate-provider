@@ -6,6 +6,8 @@ import base64
 from datetime import datetime
 
 from reportlab.lib.pagesizes import landscape, letter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
 from PIL import Image as PILImage
@@ -95,12 +97,7 @@ def generate_verification_code(cert_id, student_name, course_name):
     return verification_code.upper()
 
 
-def save_certificate_data(cert_id, verification_code, student_name, course_name, issue_date, instructor="", co_instructor=""):
-    if isinstance(instructor, list):
-        teachers = instructor
-        instructor = teachers[0] if teachers and len(teachers) > 0 else ""
-        co_instructor = teachers[1] if teachers and len(teachers) > 1 else ""
-
+def save_certificate_data(cert_id, verification_code, student_name, course_name, issue_date, instructor, instructor_title, co_instructor, co_instructor_title, organization, place, certification_type, hours):
     cert_data = {
         "id": cert_id,
         "verification_code": verification_code,
@@ -109,7 +106,13 @@ def save_certificate_data(cert_id, verification_code, student_name, course_name,
         "issue_date": issue_date,
         "timestamp": datetime.now().isoformat(),
         "instructor": instructor,
-        "co_instructor": co_instructor
+        "instructor_title": instructor_title,
+        "co_instructor": co_instructor,
+        "co_instructor_title": co_instructor_title,
+        "organization": organization,
+        "place": place,
+        "certification_type": certification_type,
+        "hours": hours
     }
 
     db = CertificateDB()
@@ -158,20 +161,21 @@ def validate_certificate(cert_id, verification_code=None):
     return True, cert_data
 
 
-def generate_certificate(student_name, course_name, instructor="", co_instructor="", issue_date=None, cert_id=None, output_path="certificate.pdf"):
+def generate_certificate(student_name, course_name, issue_date, instructor, instructor_title, co_instructor, co_instructor_title, organization, place, certification_type, hours, output_path):
     K8S_BLUE = (50/255, 109/255, 230/255)
-
-    if isinstance(instructor, list):
-        teachers = instructor
-        instructor = teachers[0] if teachers and len(teachers) > 0 else ""
-        co_instructor = teachers[1] if teachers and len(teachers) > 1 else ""
 
     input_data = {
         'student': student_name,
         'course': course_name,
-        'teacher': instructor if instructor else 'TEACHER NAME',
-        'co-teacher': co_instructor if co_instructor else '',
-        'date': issue_date
+        'teacher': instructor,
+        'co-teacher': co_instructor,
+        'date': issue_date,
+        'certification_type': certification_type,
+        'instructor_title': instructor_title,
+        'co_instructor_title': co_instructor_title,
+        'organization': organization,
+        'hours': hours,
+        'place': place
     }
 
     main_font = 'Helvetica'
@@ -181,8 +185,6 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
 
     font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'assets/DancingScript-Regular.ttf')
     if os.path.exists(font_path):
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
         pdfmetrics.registerFont(TTFont('DancingScript-Regular', font_path))
 
     page_width, page_height = landscape(letter)
@@ -199,10 +201,10 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
 
     c.setFont(main_font_bold, 24)
     c.setFillColorRGB(1, 1, 1)
-    c.drawString(30, page_height - 30, "KubeCraft")
+    c.drawString(30, page_height - 30, input_data['organization'])
 
     c.setFont(main_font, 20)
-    cert_text = "Kubernetes Certification"
+    cert_text = input_data['certification_type']
     cert_width = c.stringWidth(cert_text, main_font, 20)
     c.drawString(page_width - cert_width - 30, page_height - 30, cert_text)
 
@@ -227,7 +229,7 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
     certifies_width = c.stringWidth(certifies_text, secondary_font, 16)
     c.drawString((page_width - certifies_width) / 2, page_height - 195, certifies_text)
 
-    student_name = input_data.get('student', 'STUDENT NAME').title()
+    student_name = input_data.get('student', '')
     c.setFont(signature_font, 42)
     c.setFillColorRGB(0, 0, 0)
     name_width = c.stringWidth(student_name, signature_font, 42)
@@ -245,8 +247,8 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
     completion_width = c.stringWidth(completion_text, secondary_font, 16)
     c.drawString((page_width - completion_width) / 2, page_height - 310, completion_text)
 
-    course_name = input_data.get('course', 'COURSE NAME').title()
-    hours = input_data.get('hours', 'X')
+    course_name = input_data.get('course', '')
+    hours = input_data.get('hours', '')
     c.setFont(main_font_bold, 36)
     c.setFillColorRGB(*K8S_BLUE)
     course_width = c.stringWidth(course_name, main_font_bold, 36)
@@ -255,56 +257,66 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
     formatted_date = format_date(input_data.get('date', None))
     c.setFont(secondary_font, 16)
     c.setFillColorRGB(0.2, 0.2, 0.2)
-    date_text = f"Amounting to a total of {hours} hours. Given on {formatted_date} at Skool/KubeCraft."
+    place = input_data.get('place', '')
+    date_text = f"Amounting to a total of {hours} hours. Given on {formatted_date} at {place}."
     date_width = c.stringWidth(date_text, secondary_font, 16)
     c.drawString((page_width - date_width) / 2, page_height - 415, date_text)
 
     signature_y = 100
     signature_line_width = 200
-    teacher_name = input_data.get('teacher', 'TEACHER NAME').title()
+    teacher_name = input_data.get('teacher', '')
+
+    if input_data.get('co-teacher'):
+        teacher_x = page_width/3
+    else:
+        teacher_x = page_width/2
 
     c.setFont(signature_font, 22)
     c.setFillColorRGB(0, 0, 0)
     teacher_sig_width = c.stringWidth(teacher_name, signature_font, 22)
-    c.drawString(page_width/3 - teacher_sig_width/2, signature_y+3, teacher_name)
+    c.drawString(teacher_x - teacher_sig_width/2, signature_y+3, teacher_name)
 
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
-    c.line(page_width/3 - signature_line_width/2, signature_y-10,
-           page_width/3 + signature_line_width/2, signature_y-10)
+    c.line(teacher_x - signature_line_width/2, signature_y-10,
+           teacher_x + signature_line_width/2, signature_y-10)
 
     c.setFont(secondary_font, 12)
     c.setFillColorRGB(0.2, 0.2, 0.2)
-    c.drawString(page_width/3 - signature_line_width/2, signature_y - 30, teacher_name)
+    c.drawString(teacher_x - signature_line_width/2, signature_y - 30, teacher_name)
 
     c.setFont(secondary_font, 10)
-    c.drawString(page_width/3 - signature_line_width/2, signature_y - 45, "Lead Kubernetes Instructor")
+    instructor_title = input_data.get('instructor_title', '')
+    c.drawString(teacher_x - signature_line_width/2, signature_y - 45, instructor_title)
 
     if input_data.get('co-teacher'):
-        co_teacher_name = input_data.get('co-teacher').title()
+        co_teacher_x = 2 * page_width/3
+        co_teacher_name = input_data.get('co-teacher', '')
 
         c.setFont(signature_font, 22)
+        c.setFillColorRGB(0, 0, 0)
         co_teacher_sig_width = c.stringWidth(co_teacher_name, signature_font, 22)
-        c.drawString(2*page_width/3 - co_teacher_sig_width/2, signature_y+3, co_teacher_name)
+        c.drawString(co_teacher_x - co_teacher_sig_width/2, signature_y+3, co_teacher_name)
 
         c.setStrokeColorRGB(0, 0, 0)
-        c.line(2*page_width/3 - signature_line_width/2, signature_y-10,
-               2*page_width/3 + signature_line_width/2, signature_y-10)
+        c.setLineWidth(1)
+        c.line(co_teacher_x - signature_line_width/2, signature_y-10,
+               co_teacher_x + signature_line_width/2, signature_y-10)
 
         c.setFont(secondary_font, 12)
-        c.drawString(2*page_width/3 - signature_line_width/2, signature_y - 30, co_teacher_name)
+        c.setFillColorRGB(0.2, 0.2, 0.2)
+        c.drawString(co_teacher_x - signature_line_width/2, signature_y - 30, co_teacher_name)
 
         c.setFont(secondary_font, 10)
-        c.drawString(2*page_width/3 - signature_line_width/2, signature_y - 45, "Kubernetes Platform Specialist")
+        co_instructor_title = input_data.get('co_instructor_title', '')
+        c.drawString(co_teacher_x - signature_line_width/2, signature_y - 45, co_instructor_title)
 
     cert_id = generate_secure_certificate_id(student_name, course_name, formatted_date)
     verification_code = generate_verification_code(cert_id, student_name, course_name)
 
-    save_certificate_data(cert_id, verification_code, student_name, course_name, formatted_date, instructor, co_instructor)
-
     c.setFont(secondary_font, 10)
     c.setFillColorRGB(1, 1, 1)
-    c.drawString(30, 10, "Powered by KubeCraft")
+    c.drawString(30, 10, f"Powered by {input_data['organization']}")
 
     c.setFont(secondary_font, 10)
     verification_text = f"Certificate ID: {cert_id} | Verification Code: {verification_code}"
@@ -329,63 +341,3 @@ def generate_certificate(student_name, course_name, instructor="", co_instructor
     print(f"Verification Code: {verification_code}")
 
     return output_path
-
-
-def main():
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Kubernetes Certificate Generator and Validator')
-
-    subparsers = parser.add_subparsers(dest='command', help='Command to run')
-
-    generate_parser = subparsers.add_parser('generate', help='Generate a certificate')
-    generate_parser.add_argument('--input', '-i', default='input.txt', help='Input file path')
-    generate_parser.add_argument('--output', '-o', default='certificate.pdf', help='Output PDF path')
-
-    validate_parser = subparsers.add_parser('validate', help='Validate a certificate')
-    validate_parser.add_argument('--id', required=True, help='Certificate ID to validate')
-    validate_parser.add_argument('--code', help='Verification code (optional)')
-
-    args = parser.parse_args()
-
-    if args.command == 'generate':
-        try:
-            if not os.path.exists(args.input):
-                print(f"Error: {args.input} not found.")
-                return
-
-            input_data = read_input_file(args.input)
-
-            required_fields = ['student', 'course', 'hours']
-            missing = [field for field in required_fields if field not in input_data]
-            if missing:
-                print(f"Error: Missing required fields: {', '.join(missing)}")
-                return
-
-            output_path, cert_id, verification_code = generate_certificate(input_data, args.output)
-            print("Certificate generated successfully!")
-            print("Validation Information:")
-            print(f"  Certificate ID: {cert_id}")
-            print(f"  Verification Code: {verification_code}")
-
-        except Exception as e:
-            print(f"Error generating certificate: {e}")
-
-    elif args.command == 'validate':
-        try:
-            is_valid, cert_data = validate_certificate(args.id, args.code)
-
-            if is_valid:
-                print("Certificate is valid!")
-                print("Certificate Details:")
-                print(f"  Student: {cert_data['student_name']}")
-                print(f"  Course: {cert_data['course_name']}")
-                print(f"  Issue Date: {cert_data['issue_date']}")
-            else:
-                print("Certificate validation failed!")
-
-        except Exception as e:
-            print(f"Error validating certificate: {e}")
-
-    else:
-        parser.print_help()

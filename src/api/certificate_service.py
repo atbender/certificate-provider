@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
-from src.core.k8s_certificate import (
+from src.core.certificate_renderer import (
     validate_certificate,
     generate_certificate,
     save_certificate_data,
@@ -32,15 +31,20 @@ class ValidationResponse(BaseModel):
 class CertificateRequest(BaseModel):
     student_name: str
     course_name: str
-    issue_date: str = None
-    instructor: str = ""
-    co_instructor: str = ""
+    issue_date: str
+    instructor: str
+    instructor_title: str
+    co_instructor: str
+    co_instructor_title: str
+    organization: str
+    place: str
+    certification_type: str
+    hours: str
 
 
 class CertificateResponse(BaseModel):
     certificate_id: str
     verification_code: str
-    pdf_path: str
 
 
 def validate_and_respond(certificate_id, verification_code):
@@ -58,7 +62,13 @@ def validate_and_respond(certificate_id, verification_code):
                 "course_name": cert_data["course_name"],
                 "issue_date": cert_data["issue_date"],
                 "instructor": cert_data.get("instructor", ""),
-                "co_instructor": cert_data.get("co_instructor", "")
+                "instructor_title": cert_data.get("instructor_title", ""),
+                "co_instructor": cert_data.get("co_instructor", ""),
+                "co_instructor_title": cert_data.get("co_instructor_title", ""),
+                "organization": cert_data.get("organization", ""),
+                "place": cert_data.get("place", ""),
+                "certification_type": cert_data.get("certification_type", ""),
+                "hours": cert_data.get("hours", "")
             }
         )
     elif cert_data:
@@ -78,9 +88,15 @@ def generate_certificate_pdf(cert_data):
         pdf_path = generate_certificate(
             cert_data["student_name"],
             cert_data["course_name"],
-            cert_data.get("instructor", ""),
-            cert_data.get("co_instructor", ""),
             cert_data["issue_date"],
+            cert_data.get("instructor", ""),
+            cert_data.get("instructor_title", ""),
+            cert_data.get("co_instructor", ""),
+            cert_data.get("co_instructor_title", ""),
+            cert_data.get("organization", ""),
+            cert_data.get("place", ""),
+            cert_data.get("certification_type", ""),
+            cert_data.get("hours", ""),
             cert_data["id"]
         )
         return pdf_path
@@ -145,12 +161,10 @@ async def generate_certificate_endpoint(
     request: CertificateRequest,
     token: str = Depends(verify_admin_token)
 ):
-    issue_date = request.issue_date or datetime.now().strftime("%Y-%m-%d")
-
     cert_id = generate_secure_certificate_id(
         request.student_name,
         request.course_name,
-        issue_date
+        request.issue_date
     )
 
     verification_code = generate_verification_code(
@@ -162,9 +176,15 @@ async def generate_certificate_endpoint(
     pdf_path = generate_certificate(
         request.student_name,
         request.course_name,
+        request.issue_date,
         request.instructor,
+        request.instructor_title,
         request.co_instructor,
-        issue_date,
+        request.co_instructor_title,
+        request.organization,
+        request.place,
+        request.certification_type,
+        request.hours,
         cert_id
     )
 
@@ -173,15 +193,20 @@ async def generate_certificate_endpoint(
         verification_code,
         request.student_name,
         request.course_name,
-        issue_date,
+        request.issue_date,
         request.instructor,
-        request.co_instructor
+        request.instructor_title,
+        request.co_instructor,
+        request.co_instructor_title,
+        request.organization,
+        request.place,
+        request.certification_type,
+        request.hours
     )
 
     return CertificateResponse(
         certificate_id=cert_id,
-        verification_code=verification_code,
-        pdf_path=pdf_path
+        verification_code=verification_code
     )
 
 web_app = FastAPI()
