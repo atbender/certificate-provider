@@ -20,19 +20,12 @@ COPY scripts/ ./scripts/
 # install fonts
 RUN chmod +x ./scripts/install_fonts.sh && ./scripts/install_fonts.sh
 
-# wrapper script to run api only (removed streamlit as certificate.py doesn't exist)
-RUN echo '#!/bin/bash\n\
-export PYTHONPATH=$PYTHONPATH:/app\n\
-python -m src.main\n\
-' > /app/run.sh && chmod +x /app/run.sh
-
 RUN mkdir -p /app/data
 
+ENV PYTHONPATH=${PYTHONPATH}:/app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# expose streamlit and api ports
-EXPOSE 8501
 EXPOSE 8000
 
-ENTRYPOINT ["/app/run.sh"]
+ENTRYPOINT ["python", "-m", "src.main"]
