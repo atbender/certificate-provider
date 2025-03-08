@@ -20,7 +20,7 @@ docker compose up --build
 
 ### Creating Certificates
 
-Send a POST request to `/generate` with your admin token:
+Send a POST request to `/api/generate` with your admin token:
 
 ```bash
 curl -X POST "http://localhost:8000/api/generate" \
@@ -39,16 +39,20 @@ curl -X POST "http://localhost:8000/api/generate" \
 
 **Option 1:** Use the web interface at `http://localhost:8000`
 
-**Option 2:** Use the API
+**Option 2:** Use the API:
 
 ```bash
 # Simple GET request
-curl "http://localhost:8000/validate?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B"
+curl "http://localhost:8000/api/validate?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B"
 ```
 
 ### Viewing & Downloading
 
-```
+**Option 1:** Use the web interface at `http://localhost:8000`
+
+**Option 2:** Use the following endpoints with query parameters:
+
+```bash
 # View in browser
 http://localhost:8000/view?certificate_id=KC-202305-4C2A90-C9B1&verification_code=WEDGD0HZII0B
 
