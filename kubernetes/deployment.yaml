@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certificate-provider
+  namespace: certificate-provider
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: certificate-provider
+  template:
+    metadata:
+      labels:
+        app: certificate-provider
+    spec:
+      containers:
+      - name: certificate-provider
+        image: ghcr.io/atbender/certificate-provider/certificate-provider:latest
+        ports:
+          - containerPort: 8050
+        volumeMounts:
+            - mountPath: /app/data
+              name: certificate-data
+        env:
+        - name: ADMIN_TOKEN
+          value: "your-secure-admin-token"
+      imagePullSecrets:
+      - name: github-registry
+      volumes:
+        - name: certificate-data
+          persistentVolumeClaim:
+            claimName: certificate-data
